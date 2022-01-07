@@ -13,12 +13,13 @@ bottom=2.8cm
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[utf8]{inputenc}
-\usepackage[english]{babel}
+% set language!!! auto translate abstract, Inhaltsverzeichnis etc!
+
+\usepackage[german]{babel}
 \usepackage[usenames,dvipsnames]{color}
 \usepackage[onehalfspacing]{setspace}
 \usepackage{listings,lstautogobble}
 \usepackage{float}                          % fix floats (tab./fig.) in place
-
 \usepackage[headsepline]{scrlayer-scrpage}  % page header for KOMA
 \usepackage{pdfpages}                       % to include PDF files
 \usepackage{pdflscape}                      % for landscape tables
@@ -131,7 +132,7 @@ dashed=false,
 		\includegraphics[width=5cm]{figures/hsa_logo-eps-converted-to.pdf}
 		
 		\vspace{1cm}
-		{\scshape\LARGE\textbf OWASP Offensive Web Testing Framework\par}
+		{\scshape\LARGE\textbf Forensische Analyse eines EXT3 Dateisystems\par}
 		\vspace{0.3cm}
 		{\scshape\Large
 			Master Industrial Security \\
@@ -140,15 +141,15 @@ dashed=false,
 			\par}
 		\vspace{1cm}
 		
-		{\scshape\huge Tool Evaluation	\par}
+		%{\scshape\huge Tool Evaluation	\par}
 		
 		\vspace{8cm}
 		
 		\begin{table}[!htbp]
 			\centering
-			\caption{Student author}
+			\caption{Student}
 			\begin{tabular}{ll}
-				\textbf{Student}			&	\textbf{Student ID}		\\
+				\textbf{Student}			&	\textbf{Matrikelnummer}		\\
 				\hline
 				\hline
 				Michael Wager	&	2081894			\\
@@ -184,10 +185,7 @@ dashed=false,
 	\pagenumbering{arabic}      % start page numbering anew
 	
 	%	\newpage
-	
-	% TODO: motivation, technical analysis & features
-	% demonstration
-	% ausblick, development process (github) etc....
+
 	\input{sections/section01.tex}
 
 	% \centeredpart{Safety}
@@ -197,11 +195,7 @@ dashed=false,
 	\section{Abbreviations}
 	\begin{acronym}[SMTP] % longest acronym
 		% NOTE: keep me sorted alphabetically!
-		\acro{nist}[NIST]{National Institute of Standards and Technology}		
-		\acro{owasp}[OWASP]{Open Web Application Security Project}
-		\acro{owtf}[OWTF]{Offensive Web Testing Framework}
-		\acro{ptes}[PTES]{Penetration Testing Execution Standard}		
-		\acro{sdlc}[SDLC]{Software Development Life Cycle}		
+		\acro{ext}[EXT]{Extended file system}		
 		
 		
 	\end{acronym}
