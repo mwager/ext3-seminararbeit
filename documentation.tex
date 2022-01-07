@@ -1,0 +1,247 @@
+\documentclass[
+11pt,
+liststotoc,
+bibtotocnumbered,
+headheight=34pt     % bigger page header to fit HSA logo
+]{scrartcl}             % use KOMA scripts
+%
+\usepackage[
+textwidth=14cm,
+footskip=0.9cm,
+bottom=2.8cm
+]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[onehalfspacing]{setspace}
+\usepackage{listings,lstautogobble}
+\usepackage{float}                          % fix floats (tab./fig.) in place
+
+\usepackage[headsepline]{scrlayer-scrpage}  % page header for KOMA
+\usepackage{pdfpages}                       % to include PDF files
+\usepackage{pdflscape}                      % for landscape tables
+\usepackage[table]{xcolor}                  % for colored table cells
+\usepackage{csquotes}
+\usepackage[hidelinks]{hyperref}
+\usepackage[printonlyused]{acronym}
+\usepackage[binary-units=true, per-mode=symbol, locale = US, parse-numbers=false, detect-weight=true, detect-family=true]{siunitx}	% for SI units (i.e. Mbit/s)
+%Pakete Valentin
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{placeins}
+\usepackage{eurosym}
+
+%Pakete Christian
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{textcomp} % Needed for additional symbolds (Degree, Copyright, ...)
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{verbatim}
+\usepackage{subfigure}
+\usepackage{wrapfig}
+\usepackage{abstract}
+\usepackage{amssymb} % needed for math
+\usepackage{amsmath} % needed for math
+\usepackage{longtable}
+\usepackage{amsfonts}
+%\usepackage{subcaption}
+\usepackage{cleveref}
+\usepackage{acronym}
+%\usepackage[backend=bibtex, sorting=none, maxbibnames=2, minbibnames=2, maxcitenames=1, mincitenames=1, style=ieee]{biblatex}
+
+\usepackage{float}
+
+% avoid widows and orphans
+\clubpenalty10000
+\widowpenalty10000
+
+% magic formula to center the part headings horizontally
+\AtBeginDocument{\renewcommand*{\raggedpart}{\centering}}
+
+% New SI unit: \Byte = Byze (\byte = B)
+\DeclareSIUnit\Byte{Byte}
+
+% bibliography: BibLaTex backed by Biber
+\usepackage[backend=bibtex,
+date=long,
+style=ieee,
+autolang=other,
+dashed=false,
+%bibencoding=UTF8
+]{biblatex}
+
+% you can add multiple paths
+\addbibresource{literature.bib}
+
+% formatting for code
+\lstset{
+	basicstyle=\ttfamily,
+	commentstyle=\color{Green},
+	keywordstyle=\color{Cerulean},
+	frame=single,
+	numbers=left,
+	numberstyle=\footnotesize\color{Gray},
+	showstringspaces=false,
+	stringstyle=\color{Mulberry},
+	tabsize=3,
+	breaklines
+}
+
+%softer line break
+\tolerance 1414 \hbadness 1414
+
+% colors for source code
+\lstset{
+	literate=%
+	{0}{{{\color{Orange}0}}}1
+	{1}{{{\color{Orange}1}}}1
+	{2}{{{\color{Orange}2}}}1
+	{3}{{{\color{Orange}3}}}1
+	{4}{{{\color{Orange}4}}}1
+	{5}{{{\color{Orange}5}}}1
+	{6}{{{\color{Orange}6}}}1
+	{7}{{{\color{Orange}7}}}1
+	{8}{{{\color{Orange}8}}}1
+	{9}{{{\color{Orange}9}}}1
+}
+
+\newcommand{\authoredby}[1]{
+	\begin{flushright}
+		\begin{scriptsize}
+			#1
+		\end{scriptsize}
+	\end{flushright}
+}
+
+\newcommand{\centeredpart}[1]{
+	\newpage
+	\vspace*{\fill}
+	\part{#1}
+	\vspace*{\fill}
+	\newpage
+}
+
+\begin{document}
+	\begin{titlepage}
+		\centering
+		\includegraphics[width=5cm]{figures/hsa_logo-eps-converted-to.pdf}
+		
+		\vspace{1cm}
+		{\scshape\LARGE\textbf OWASP Offensive Web Testing Framework\par}
+		\vspace{0.3cm}
+		{\scshape\Large
+			Master Industrial Security \\
+			University of Applied Sciences Augsburg
+			
+			\par}
+		\vspace{1cm}
+		
+		{\scshape\huge Tool Evaluation	\par}
+		
+		\vspace{8cm}
+		
+		\begin{table}[!htbp]
+			\centering
+			\caption{Student author}
+			\begin{tabular}{ll}
+				\textbf{Student}			&	\textbf{Student ID}		\\
+				\hline
+				\hline
+				Michael Wager	&	2081894			\\
+			\end{tabular}
+		\end{table}
+		
+		%		\title{Major Project 2020}
+		%\author{
+		%	Master Industrial Security \\
+		%		University of Applied Sciences Augsburg \\
+		%	Application scenario
+		%
+		\date{\today}
+	\end{titlepage}
+	
+	\pagenumbering{gobble}      % no page numbering
+	%	\maketitle
+	%	\thispagestyle{empty}       % no page number magic
+	
+	
+	\pagenumbering{roman}       % start page numbering
+	
+	\ihead{\includegraphics[height=1cm]{figures/hsa_logo-eps-converted-to.pdf}}
+	\ohead{Offensive Web Testing Framework}
+	
+	\input{sections/abstract.tex}
+	\newpage
+	
+	\tableofcontents
+	\clearpage
+	
+	\newpage
+	\pagenumbering{arabic}      % start page numbering anew
+	
+	%	\newpage
+	
+	% TODO: motivation, technical analysis & features
+	% demonstration
+	% ausblick, development process (github) etc....
+	\input{sections/section01.tex}
+
+	% \centeredpart{Safety}
+	% \input{somename/safety.tex}
+	
+	\newpage
+	\section{Abbreviations}
+	\begin{acronym}[SMTP] % longest acronym
+		% NOTE: keep me sorted alphabetically!
+		\acro{nist}[NIST]{National Institute of Standards and Technology}		
+		\acro{owasp}[OWASP]{Open Web Application Security Project}
+		\acro{owtf}[OWTF]{Offensive Web Testing Framework}
+		\acro{ptes}[PTES]{Penetration Testing Execution Standard}		
+		\acro{sdlc}[SDLC]{Software Development Life Cycle}		
+		
+		
+	\end{acronym}
+	
+	
+	\newpage
+	%	\setcounter{secnumdepth}{0}
+	
+	\printbibliography
+	
+	\appendix
+	
+		% \section{Appendix: Project Scenario}\label{appendix:Project_scenario}
+		% \includepdf[pages=-]{../scenario/CM_scenario_definition.pdf}
+		
+		% \section{Appendix: System and Software Requirements Specification}\label{appendix:SRS_specification}
+		% \includepdf[pages=-]{../SRS/CM_system_software_requirements_specification.pdf}
+		
+		% \section{Appendix: Integration Test} \label{appendix:Integration_test}
+		% \includepdf[pages=-]{../integration_test/CM_integration_test_report.pdf}
+		
+		% \section{Appendix: Customer Integration Test}\label{appendix:Customer_integration_test}
+		% \includepdf[pages=-]{../customer_integration_test/CM_customer_integration_test_report.pdf}
+	
+		% \section{Appendix: Integration Test RC2} \label{appendix:Integration_test RC2}
+		% \includepdf[pages=-]{../integration_test_rc2/CM_integration_test_report_rc2.pdf}
+	%
+		% \section{Appendix: System Integration Test RC2}
+		% \label{appendix:System_integration_test RC2}
+		% \includepdf[pages=-]{../system_integration_test_rc2/CM_system_integration_test_report_rc2.pdf}
+	%	
+		% \section{Appendix: Project Status Reports}\label{appendix:Project_status_reports}
+		% \includepdf[pages=-]{../report/project_status_report_1_20201030.pdf}
+		% \includepdf[pages=-]{../report/project_status_report_2_20201106.pdf}
+		% \includepdf[pages=-]{../report/project_status_report_3_20201204.pdf}
+		% \includepdf[pages=-]{../report/project_status_report_4_20201214.pdf}
+	
+	
+	
+	
+	
+	
+\end{document}
