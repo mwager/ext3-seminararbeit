@@ -1,85 +1,96 @@
 
-% TODO
-Halllowoeo dsff dfs  df dss f \cite{Carrier.06.01.2022}  welt1
 
+TODO: NACH TODO SUCHEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-hallo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Hallo \cite{Sciencedirect.07.01.2022}  welt
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
 
-Struktur EINFACH GENAU SO!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-\textbf{1. Technischer Hintergrund\\}
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-Beschreiben Sie in diesem Abschnitt die technische Funktionsweise des EXT3 Dateisystems. 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
-bissl history... bissl blocl, etc siehe weiter unten!\\
-
-
-Gehen Sie dabei im speziellen auf die folgenden Fragestellungen ein:\\
-
-a) Wie speichert das Dateisystem Daten (Inhaltsdaten)?\\
-
-b) Wie speichert das Dateisystem Metadaten (Dateinamen, Größe, Berechtigungen, Zeitstempel, ...)?\\
-
-c) Was passiert bei einem EXT3 Dateisystem im Hintergrund, wenn eine Datei erzeugt wird?\\
-
-d) Was passiert bei einem EXT3 Dateisystem im Hintergrund, wenn eine Datei gelöscht wird?\\
-
-Generieren Sie für die Bearbeitung ein eigenständiges kleines „praktisches“ Beispiel, an dem Sie den technischen Hintergrund anschaulich erläutern.\\
-
-
-\textbf{2. Forensische Analyse\\}
-
-Beschreiben Sie in diesem Abschnitt forensischen Konzepte zur Analyse eines EXT3 Dateisystems.\\
-Gehen Sie dabei im speziellen auf die folgenden Fragestellungen ein:\\
-
-a) Welche forensischen Konzepte existieren für die Auswertung eines EXT3 Dateisystems?\\
-
-b) Welche Ansätze unter EXT3 gibt es, um eine gelöschte Datei wiederherzustellen?\\
-
-Demonstrieren Sie insbesondere Aufgabenstellung 2b) anhand Ihres kleinen „praktischen“ Beispiels aus Aufgabenstellung 1.\\
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 
 
 
 
+\section{Technische Hintergründe}
 
+\subsection{Geschichte des Ext-Dateisystems}
 
+% TODO: hier bissl mehr?
+% TODO: RE-READ ALLES FREITAG!!!!!!!!!!!!!!!
+% TODO: AUCH GLEICH BLOG POST! mit paar screenshots vielleicht?
 
-
-\section{Geschichte des EXT Dateisystems}
-
-Das sogenannte \ac{ext} war das erste einer Reihe von Dateisystemen welches speziell für Linux entwickelt wurde und damals das minix Dateisystem ablöste. EXT in Version 1 ist mittlerweile allerdings veraltet und wird in aktuellen Linuxdistributionen nicht mehr verwendet. Die folgenden Erweiterungen existieren:
+Das sogenannte \ac{ext} war das Erste einer Reihe von Dateisystemen welches speziell für Linux entwickelt wurde und damals das minix-Dateisystem ablöste. \ac{ext} in Version 1 ist mittlerweile allerdings veraltet und wird in aktuellen Linux-Distributionen nicht mehr verwendet. Ext3 ist die neuere Variante, bleibt von Grund auf jedoch exakt gleich wie Ext2, führt jedoch "file system journaling" ein. Die folgenden Varianten sind aktuell noch gängig und werden aktiv eingesetzt:
 
 \begin{itemize}
-	\item ext2 - Führte separate Zeitstempel für Dateizugriffe, inode- und Datenmodifikation. Bringt keine Unterstützung für journaling.
-	\item ext3 - Führt journaling ein (und ist required!)
-	\item ext4 - Unterstützung für fast fsck[1], native filesystem encryption[2], journaling, jedoch auch für non-journaling.
+	\item ext2 - Führte separate Zeitstempel für Dateizugriffe, Inode- und Datenmodifikation ein. Bringt keine Unterstützung für journaling.
+	\item ext3 - Führte journaling ein (und ist required!)
+	\item ext4 - Unterstützung für fast fsck, native filesystem encryption, journaling, jedoch auch für non-journaling
 \end{itemize}
 
 % TODO
-- Einfach das ext2 pdf lesen (ext3 ist einfach ext2 MIT JOURNALING!!!)
-- Journaling beschreiben! -> bedeutet das DS hat einen extra Bereich in dem ALLE Änderungen getrackt werden. Im Falle eines Systemcrash kann somit die Wahrscheinlichkit von FS corruption verringert werden (!?!?!??!)
-- memory faster than writes to disk
-- 
-
-- Intro to EXT allgemein, siehe Fragen in der Aufgabenstellung
 
 
-\section{Technische Hintergründe zum EXT3 Dateisystem}
+\subsection{Basics}
 
-EINFACH HIER ERSTMAL DIE *DEFINITIONS* DURCH!!!!!!!!!!!
-https://raw.githubusercontent.com/skeledrew/ext4-raw-reader/master/ext2.pdf
+Das Ext-Dateisystem verwendet Blöcke als Basiseinheit zum Speichern von Daten \cite{Ext2.07.01.2022}. Sogenannte "Inodes (Index-Nodes) werden zum Speichern von Metadaten verwendet, Blockgruppen zur optimierten logischen Strukturierung, Verzeichnisse um hierarchische Strukturen darstellen zu können, Block- und Inode-Bitmaps um allokierte Blöcke und Inodes zu kennzeichnen, sowie Superblöcke um allgemeine Informationen des Dateisystems zu speichern. Kopien von wichtigen Datenstrukturen wie z.B. den Superblöcken werden redundant vorgehalten und alle Daten welche mit Dateien assoziiert werden, sind aus Gründen der Performance gut lokalisiert\cite{Carrier.06.01.2022}.
 
-Creating filesystem with 7680000 4k blocks and 1921360 inodes
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/ext1.png}
+	\caption{
+		Zusammenhang zwischen Verzeichniseinträgen, Inodes und Inhaltsblöcken \cite{Carrier.06.01.2022}
+	}
+	\label{fig:ext2}
+\end{figure}
 
-==> wir haben also immer 4k BLOCKS!!! mit N inodes!!!!!!!!!!
+Abbildung \ref{fig:ext2} zeigt blaaaa TODO
+
+
+% HIER NUN ERSTMAL alle *DEFINITIONS* DURCH!!!!!!!!!!!
+
+\textbf{Praktische Beispiele}
+
+Alle praktischen Beispiele zu diesem Dokument wurden unter Ubuntu (Version 20.04.1) auf einem 32GB USB Stick durchgeführt und hier völlig transparent, je nach Kontext, präsentiert und sollten somit - unter Berücksichtigung selber OS Voraussetzungen - 1-zu-1 nachgemacht werden können. 
+
+Als erstes wurde der USB Stick mit dem Ext3 Dateisystem frisch formatiert:
+
+\begin{lstlisting}[language=bash,caption={Create the FS}]
+# find mounted devices and their paths:
+lsblk
+
+# unmount the device: (The usb stick here is "/dev/sdc1")
+sudo umount /dev/sdc1
+
+# Create the filesystem:
+sudo mkfs -t ext3 /dev/sdc
+\end{lstlisting}  
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/createfs.png}
+	\caption{
+		Erstellen eines EXT3 Dateisystems auf einem USB Stick
+	}
+	\label{fig:createfs}
+\end{figure}
+
+Im Abbildung \ref{fig:createfs} ist zu sehen wie das Dateisystem auf dem USB Stick unter "/dev/sdc" erstellt wird. Es werden 7680000 4KB Blöcke mit 1921360 Inodes erstellt (32GB). Für das Dateisystem wird eine \ac{uuid} generiert, ein Journal erstellt, sowie die Blöcke der Superblock-Backups ausgegeben.
+
+% TODO: hier die Superblock analyse erstmal um das alles zu bestätigen!
 
 Writing inode tables:  48/235
 WAS SIND inode TABLES!!?!??!?!?!?! 1921360 inodes in 235 tables?!?! NOPE. 235 Block Groups - SEE meine Zeichnung auf Schmierzettel!
@@ -87,12 +98,14 @@ WAS SIND inode TABLES!!?!??!?!?!?! 1921360 inodes in 235 tables?!?! NOPE. 235 Bl
 8176 inodes per BLOCK GROUP
 \\
 
+\subsection{Wie speichert das Dateisystem Daten (Inhaltsdaten)?}
 
-a) Wie speichert das Dateisystem Daten (Inhaltsdaten)? 
 
 ZeichnungEN schmierzettel und mehr! hier nochmal paar Zeichnungen schön hübsch rein, CONTENT!
 
-b) Wie speichert das Dateisystem Metadaten (Dateinamen, Größe, Berechtigungen, Zeitstempel, ...)? 
+
+
+\subsection{Wie speichert das Dateisystem Metadaten (Dateinamen, Größe, Berechtigungen, Zeitstempel, ...)?}
 
 INODE ERKLÄREN!!!\\
 \\
@@ -118,11 +131,59 @@ Staring address: X, length: 1  Sparse
 
 
 
-c) Was passiert bei einem EXT3 Dateisystem im Hintergrund, wenn eine Datei erzeugt wird?  
+\subsection{Was passiert im Hintergrund, wenn eine Datei erzeugt wird?}
 
 TODO: file und dir vergleichen!
 
-d) Was passiert bei einem EXT3 Dateisystem im Hintergrund, wenn eine Datei gelöscht wird?
+\begin{lstlisting}[language=bash]
+# Asumming the fs is mounted on /media/work/usb
+touch mydocument.txt
+\end{lstlisting} 
+
+How to get the Inode IDs?
+
+\begin{lstlisting}[language=bash]
+ls -li
+total 16
+11 drwx------ 2 root root 16384 Jan 19 14:51 lost+found
+24529 -rw-rw-r-- 1 work work     0 Jan 19 15:39 mydocument.txt
+\end{lstlisting} 
+
+
+We can use the sleuth kit (TODO: REF UND DESCRIPTION!) to get more info on a specific inode:
+
+TODO really? READ THE BOOK!!!!!!!!!!!!!!!!!!!!!!!
+istat hier noch nicht notwenig.
+mach dir nich so nen stress. create file UND BEANTWORTE DIE FRAGEN. 
+UD LIES DEN CARRIER!
+
+\begin{lstlisting}[language=bash]
+sudo istat -o 0 /dev/sdc 24529
+
+inode: 24529
+Allocated
+Group: 3
+Generation Id: 3834095761
+uid / gid: 1000 / 1000
+mode: rrw-rw-r--
+size: 0
+num of links: 1
+
+Inode Times:
+Accessed:	2022-01-19 15:39:23 (CET)
+File Modified:	2022-01-19 15:39:23 (CET)
+Inode Modified:	2022-01-19 15:39:23 (CET)
+
+Direct Blocks:
+\end{lstlisting} 
+
+
+
+
+
+
+
+\subsection{Was passiert bei einem EXT3 Dateisystem im Hintergrund, wenn eine Datei gelöscht wird?}
 
 TODO: file und dir vergleichen!
 
@@ -130,11 +191,12 @@ rm -rf file -> "nullt" die inode die auf diese datei oder dir zeigt, der BLOCK j
 IM FALLE EINES DIR: 
 alle dateien werden dann halt "unlinked" von diesem dir. die haben vermutlich dann noch ihre inodes, aber der link zum dir fehlt halt !??!?!?
 
+% TODO
+Generieren Sie für die Bearbeitung ein eigenständiges kleines „praktisches“ Beispiel, an dem Sie den
+technischen Hintergrund anschaulich erläutern
 
+Daten erstellen und Löschen - siehe Aufgabenstellung!!!!!!!!!!!!!!!!!!!!!!!!
 
-\subsection{Praktisches Beispiel}
-
-Daten erstellen und Löschen - siehe Aufgabenstellung!
 
 \section{Forensische Analyse des EXT3 Dateisystems}
 
@@ -195,25 +257,7 @@ READ this: https://en.wikipedia.org/wiki/Ext3
 $ sudo dd if=/dev/sdc of=usb.dd bs=512 conv=noerror,sync status=progress
 \end{lstlisting}
 
-commands format stick:
-
-lsblk to find mounted devices
-unmount device:  sudo umount /dev/sdc1
-
-hier RICHTIG SCHÖN ZEIT LASSEN, IMMER NEUE ZEILE MIT KÄSTCHEN!!!!!
-
-sudo mkfs -t ext3 /dev/sdc
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=12cm,keepaspectratio=true]{pictures/createfs.png}
-	\caption{
-		Erstellen eines EXT3 Dateisystems auf einem USB Stick
-	}
-	\label{fig:createfs}
-\end{figure}
-TODO: GENAU BESCHREIBEN WAS DA PASSIERT!
-
-
+TODO beispiel:
 
 Datei erstellen, löschen ist ja bereits in TEIL1 passiert! darauf verweisen, daran werde ich nun weiterarbeiten hier!
 
