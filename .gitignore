@@ -36,3 +36,4 @@ svg-inkscape/*
 !design/*
 !implementation/*
 !analysis/*
+.DS_Store

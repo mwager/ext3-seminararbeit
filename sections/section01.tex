@@ -41,8 +41,6 @@ Das sogenannte \ac{ext} war das Erste einer Reihe von Dateisystemen welches spez
 	\item ext4 - Unterstützung für fast fsck, native filesystem encryption, journaling, jedoch auch für non-journaling
 \end{itemize}
 
-% TODO
-
 
 \subsection{Basics}
 
@@ -54,29 +52,94 @@ Das Ext-Dateisystem verwendet Blöcke als Basiseinheit zum Speichern von Daten \
 	\caption{
 		Zusammenhang zwischen Verzeichniseinträgen, Inodes und Inhaltsblöcken \cite{Carrier.06.01.2022}
 	}
-	\label{fig:ext2}
+	\label{fig:ext1}
 \end{figure}
 
-Abbildung \ref{fig:ext2} zeigt blaaaa TODO
+Abbildung \ref{fig:ext1} zeigt den Zusammenhang zwischen Verzeichniseinträgen, Inodes und Inhaltsblöcken. Für jede Datei (und für jedes Verzeichnis) existiert eine Inode, welche dazugehörige Metadaten, sowie Referenzen auf die Blöcke mit dem tatsächlichen Inhalt speichert.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/layout.png}
+	\caption{
+		Layout des Dateisystems \cite{AnalysisExt4.07.01.2022}
+	}
+	\label{fig:layout}
+\end{figure}
+
+Abbildung \ref{fig:layout} enthält eine graphische Darstellung des Layouts eines Ext-Dateisystems. Die Partition ist in Blockgruppen aufgeteilt und jede Blockgruppe enthält einen Superblock (optional), Group-Descriptors, die Block- und Inode-Bitmap, die Inode-Tabelle sowie die Datenblöcke. Auf diese Aufteilung innerhalb der Blockgruppen wird nun in den folgenden Unterkapiteln näher eingegangen.
+
+\subsubsection{Superblöcke}
+
+Da wir hier ein Ext3 System uf einem USB Stick erstellt haben und dieser keinen OS Kernel enthält, befindet sich auf unerem Stick auch kein Boot-Code. Dieser würde sich sonst in den ersten 1024 Bytes einer Platte befinden. Der \textit{Superblock} befindet sich ab Offset 1024 des Dateisystems und hat eine Größe von 1024 Bytes, obwohl nicht alle davon verwendet werden. Er enthält Basisinformation wie die Blockgröße, die totale Anzahl an Blöcken, die Anzahl an Blöcken pro Gruppe, die Anzahl an Inodes per Blockgruppe, den Volume-Name, den letzten Schreibzugriff, die letzte Mountzeit sowie den Pfad in dem das Dateisystem zuletzt gemounted war. Abbildung \ref{fig:superblock} zeigt eine simple Analyse des Superblocks auf unserem USB Stick.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/superblock.png}
+	\caption{
+		Analyse des Superblocks
+	}
+	\label{fig:superblock}
+\end{figure}
+
+Die ersten 4 Bytes repräsentieren die Anzahl an Inodes: \cite{Ext2.07.01.2022}:
+
+\textbf{50 51 1d 00 -> Little endian -> 00 1D 51 50 ergibt 1921360 Inodes}(Vergleiche mit Abbildung \ref{fig:createfs}).\\Die zweiten 4 Bytes repräsentieren die Anzahl an Blöcken:
+
+\textbf{00 30 75 00 => Little endien => 00 75 30 00 = ergibt 7680000 Blöcke}. Die Abbildung markiert außerdem noch den Pfad in welchem das Dateisystem zletzt gemounted war: \textbf{/media/usb}.
 
 
-% HIER NUN ERSTMAL alle *DEFINITIONS* DURCH!!!!!!!!!!!
+\subsubsection{Block Group Descriptor Tables}
+Im Block nach dem Superblock folgt die Group-Descriptor-Tabelle. Diese beschreibt wo sich Daten wie z.B. die Inode-Tabelle oder die Bitmaps innerhalb einer Blockgruppe befinden. 
 
-\textbf{Praktische Beispiele}
 
-Alle praktischen Beispiele zu diesem Dokument wurden unter Ubuntu (Version 20.04.1) auf einem 32GB USB Stick durchgeführt und hier völlig transparent, je nach Kontext, präsentiert und sollten somit - unter Berücksichtigung selber OS Voraussetzungen - 1-zu-1 nachgemacht werden können. 
+\subsubsection{Block- und Inode-Bitmaps}
+Die Block- und Inode-Bitmaps speichern den Allokationsstatus von Blöcken, sowie Inodes innerhalb der Blockgruppe. Sie geben also an welche Blöcke- bzw Inodes innerhalb der Gruppe belegt sind und welche nicht. Jedes Bit repräsentiert hier den Status eines Blocks wobei "1" bedeutet, der Block ist verwendet, "0" bedeutet der Block ist frei bzw. verfügbar.
 
+Die Inode-Bitmap funktioniert ähnlich, mit dem Unterschied dass die Bits hier auf den Allokationsstatus einer Inode-Tabelle verweisen.
+
+\subsubsection{Die Inode-Tabelle}
+
+Die Inode-Tabelle wird verwendet um jedes Verzeichnis, jede Datei, symbolischen Link oder Spezialdatei zu beschreiben. Die folgenden Metadaten werden u.a. in den Inodes gespeichert:
+
+\begin{itemize}
+	\item Dateigröße
+	\item Speicherort
+	\item Eigentümer
+	\item Gruppe
+	\item Dateityp
+	\item Berechtigungen
+	\item Zugriffs- und Änderungs- und Löschzeitpunkt
+\end{itemize}
+
+Der Dateiname wird nicht in Inodes gespeichert. Eine Datei kann ein Socket, ein Puffer, ein symbolischer Link oder eine normale Datei sein.
+
+\subsubsection{Datenblöcke}
+
+Als letztes innerhalb einer Blockgruppe folgen die Datenblöcke, dessen Adressen innerhalb der Inodes gespeichert werden. Hier befinden sich die tatsächlichen Daten.
+
+
+\subsection{Praktische Beispiele}
+
+Alle praktischen Beispiele zu diesem Dokument wurden unter der \href{https://tsurugi-linux.org/}{Tsurugi Linux-Distribution}  (Version 5.14.6) auf einem 32GB USB Stick durchgeführt und hier völlig transparent, je nach Kontext, präsentiert und sollten somit unter allen gängigen Linuxsystemen 1-zu-1 nachgemacht werden können. 
+
+\begin{lstlisting}[language=bash]
+$ uname -a
+Linux lab 5.14.6-tsurugi #1 SMP Mon Sep 20 21:45:06 CEST 2021 x86_64 x86_64 x86_64 GNU/Li
+\end{lstlisting}  
+
+\newpage
+	
 Als erstes wurde der USB Stick mit dem Ext3 Dateisystem frisch formatiert:
 
 \begin{lstlisting}[language=bash,caption={Create the FS}]
 # find mounted devices and their paths:
 lsblk
 
-# unmount the device: (The usb stick here is "/dev/sdc1")
-sudo umount /dev/sdc1
+# unmount the device: (The usb stick here is "/dev/sdb")
+sudo umount /dev/sdb
 
 # Create the filesystem:
-sudo mkfs -t ext3 /dev/sdc
+sudo mkfs -t ext3 /dev/sdb
 \end{lstlisting}  
 
 \begin{figure}[H]
@@ -90,113 +153,76 @@ sudo mkfs -t ext3 /dev/sdc
 
 Im Abbildung \ref{fig:createfs} ist zu sehen wie das Dateisystem auf dem USB Stick unter "/dev/sdc" erstellt wird. Es werden 7680000 4KB Blöcke mit 1921360 Inodes erstellt (32GB). Für das Dateisystem wird eine \ac{uuid} generiert, ein Journal erstellt, sowie die Blöcke der Superblock-Backups ausgegeben.
 
-% TODO: hier die Superblock analyse erstmal um das alles zu bestätigen!
 
-Writing inode tables:  48/235
-WAS SIND inode TABLES!!?!??!?!?!?! 1921360 inodes in 235 tables?!?! NOPE. 235 Block Groups - SEE meine Zeichnung auf Schmierzettel!
-1921360 / 235
-8176 inodes per BLOCK GROUP
-\\
+\subsubsection{Erstellen von Dateien}
 
-\subsection{Wie speichert das Dateisystem Daten (Inhaltsdaten)?}
-
-
-ZeichnungEN schmierzettel und mehr! hier nochmal paar Zeichnungen schön hübsch rein, CONTENT!
-
-
-
-\subsection{Wie speichert das Dateisystem Metadaten (Dateinamen, Größe, Berechtigungen, Zeitstempel, ...)?}
-
-INODE ERKLÄREN!!!\\
-\\
-
-sudo istat -o 0 -r /dev/sdb 24530
-inode: 24530
-Not Allocated
-Group: 3
-Generation Id: 2609919107
-uid / gid: 1000 / 1000
-mode: rrw-rw-r--
-size: 0
-num of links: 0
-
-Inode Times:
-Accessed:	2022-01-07 15:35:26 (CET)
-File Modified:	2022-01-08 13:01:30 (CET)
-Inode Modified:	2022-01-08 13:01:30 (CET)
-Deleted:	2022-01-08 13:01:30 (CET)
-
-Direct Blocks:
-Staring address: X, length: 1  Sparse
-
-
-
-\subsection{Was passiert im Hintergrund, wenn eine Datei erzeugt wird?}
-
-TODO: file und dir vergleichen!
+Folgendes Listing erzeugt eine Datei:
 
 \begin{lstlisting}[language=bash]
-# Asumming the fs is mounted on /media/work/usb
+# Asumming the fs is mounted on /media/usb
+cd /media/usb
 touch mydocument.txt
+echo "Hallo welt." > mydocument.txt
 \end{lstlisting} 
 
-How to get the Inode IDs?
+Mit Hilfe des Kommandos \textit{ls -li} können wir uns die Inode-ID ausgeben lassen um diese dann mit Hilfe des SleuthKit (\cite{Sleuthkit.07.01.2022}) Kommandos \textit{icat} näher zu betrachten.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/inode-stats.png}
+	\caption{
+		Informationen einer Inode
+	}
+	\label{fig:inodestats}
+\end{figure}
+
+Wir sehen in Abbildung \ref{fig:inodestats}, dass unsere zuvor erstellte Datei \textit{mydocument.txt} zur Inode 24529 gehört. Sie befindet sich in Blockgruppe 3, hat eine Größe von 11 Bytes (Inhalt: \textit{Hallo welt.}) und der Inhalt der Datei befindet sich in Block Nummer 100352.
+
+Mit Hilfe von \textit{dd} wollen wir uns nun den Inhalt des Blocks 100352 ansehen, um zu verifizieren ob dort auch die Daten unerer Datei liegen:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/getfilecontent.png}
+	\caption{
+		Datei-Inhalt eines Blocks mit dd auslesen
+	}
+	\label{fig:getfilecontent}
+\end{figure}
+
+Da jeder Block in unserem Dateisystem 4096 Bytes groß ist, beginnt der Inhalt dieser Datei an Byteoffset 411041792 (Blocknummer x Blockgröße). Wir kopieren mit \textit{dd} immer 32 Byte, müssen daher mit Hilfe des \textit{skip}-Arguments angeben, ab wann wir mit dem Kopieren starten wollen (411041792/32 = 12845056). Und siehe da, der Inhalt der Datei wird korrekt ausgegeben!
+
+Interessant ist, dass bei erneutem Schreiben in die Datei ein neuer Block verwendet wird, der alte immer noch die Daten des vorherigen Schreibvorgags enthält (Inode bleibt die Selbe):
+
+TODO stackoverflow? sonst weglassen.
+
+Das liegt daran, dass TODO!
+
+
+TODO: edit und dann anderer Block??? WARUM NEUER BLOCK WENN ICH ECHO MACH!?!?!?!??!?!?!?!?!
+
+
+\subsubsection{Löschen von Dateien}
+
+Wir löschen die Datei mit folgemdem Kommando:
 
 \begin{lstlisting}[language=bash]
-ls -li
-total 16
-11 drwx------ 2 root root 16384 Jan 19 14:51 lost+found
-24529 -rw-rw-r-- 1 work work     0 Jan 19 15:39 mydocument.txt
+rm -rf mydocument.txt
 \end{lstlisting} 
 
+Wir wissen noch die Inode ID 24529. Abbildung \ref{fig:istatafterdelete} zeigt die Analyse dieser Inode mittels \textit{istat} nach dem Löschen der Datei:
 
-We can use the sleuth kit (TODO: REF UND DESCRIPTION!) to get more info on a specific inode:
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/istatafterdelete.png}
+	\caption{
+		Datei-Inhalt eines Blocks mit dd auslesen
+	}
+	\label{fig:istatafterdelete}
+\end{figure}
 
-TODO really? READ THE BOOK!!!!!!!!!!!!!!!!!!!!!!!
-istat hier noch nicht notwenig.
-mach dir nich so nen stress. create file UND BEANTWORTE DIE FRAGEN. 
-UD LIES DEN CARRIER!
+Die Inode ist nun nicht mehr allokiert (\textit{Not Allocated}), die Dateigröße beträgt nun 0 Byte und die Referenz zum Inhaltsblock wurde entfernt. Außerdem kam ein \textit{Deleted}-Datensatz hinzu. Dennoch können wir immer noch die Daten der vorherigen Blocknummer auslesen und bekommen den Inhalt der Datei. Es wird also nicht der Inhalt gelöscht, sondern nur die Referenz in der Inode gelöscht, sowie der Speicherplatz freigegeben.
 
-\begin{lstlisting}[language=bash]
-sudo istat -o 0 /dev/sdc 24529
-
-inode: 24529
-Allocated
-Group: 3
-Generation Id: 3834095761
-uid / gid: 1000 / 1000
-mode: rrw-rw-r--
-size: 0
-num of links: 1
-
-Inode Times:
-Accessed:	2022-01-19 15:39:23 (CET)
-File Modified:	2022-01-19 15:39:23 (CET)
-Inode Modified:	2022-01-19 15:39:23 (CET)
-
-Direct Blocks:
-\end{lstlisting} 
-
-
-
-
-
-
-
-\subsection{Was passiert bei einem EXT3 Dateisystem im Hintergrund, wenn eine Datei gelöscht wird?}
-
-TODO: file und dir vergleichen!
-
-rm -rf file -> "nullt" die inode die auf diese datei oder dir zeigt, der BLOCK jedoch ist immer noch auf der platte und kann betrachtet werden! DATEN ALSO NOCH DA! nur inodes werden genullt!
-IM FALLE EINES DIR: 
-alle dateien werden dann halt "unlinked" von diesem dir. die haben vermutlich dann noch ihre inodes, aber der link zum dir fehlt halt !??!?!?
-
-% TODO
-Generieren Sie für die Bearbeitung ein eigenständiges kleines „praktisches“ Beispiel, an dem Sie den
-technischen Hintergrund anschaulich erläutern
-
-Daten erstellen und Löschen - siehe Aufgabenstellung!!!!!!!!!!!!!!!!!!!!!!!!
-
+\newpage
 
 \section{Forensische Analyse des EXT3 Dateisystems}
 
@@ -263,3 +289,5 @@ Datei erstellen, löschen ist ja bereits in TEIL1 passiert! darauf verweisen, da
 
 ERSTMAL ARBEITSKOPIE!!! ganzen prozess erklären (siehe forensics BOOK -> why, how etc...)
 schön mit screenshots und code ausschnitten!
+
+TODO: file listing node.js script zum auslesen von Datenblöcken ans Ende des Docs!!!!!!!!!!!!!!
