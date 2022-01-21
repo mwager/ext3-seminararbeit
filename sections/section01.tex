@@ -1,8 +1,6 @@
 
 
-TODO: NACH TODO SUCHEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% TODO: NACH TODO SUCHEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 \section{Technische Hintergründe}
@@ -11,18 +9,17 @@ TODO: NACH TODO SUCHEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 % TODO: AUCH GLEICH BLOG POST! mit paar screenshots vielleicht?
 
-Das sogenannte \ac{ext} war das Erste einer Reihe von Dateisystemen welches speziell für Linux entwickelt wurde und damals das minix-Dateisystem ablöste. \ac{ext} in Version 1 ist mittlerweile allerdings veraltet und wird in aktuellen Linux-Distributionen nicht mehr verwendet. Ext3 ist die neuere Variante, bleibt von Grund auf jedoch exakt gleich wie Ext2, führt jedoch "file system journaling" ein. Die folgenden Varianten sind aktuell noch gängig und werden aktiv eingesetzt:
+Das sogenannte \ac{ext} war das Erste einer Reihe von Dateisystemen welches speziell für Linux entwickelt wurde und damals das minix-Dateisystem ablöste. \ac{ext} in Version 1 ist mittlerweile allerdings veraltet und wird in aktuellen Linux-Distributionen nicht mehr verwendet. Ext3 ist die neuere Variante, bleibt von Grund auf jedoch exakt gleich wie Ext2, führt jedoch \textit{file system journaling} ein. Die folgenden Varianten sind aktuell noch gängig und werden aktiv eingesetzt:
 
 \begin{itemize}
 	\item ext2 - Führte separate Zeitstempel für Dateizugriffe, Inode- und Datenmodifikation ein. Bringt keine Unterstützung für journaling.
 	\item ext3 - Führte journaling ein (und ist required!)
-	\item ext4 - Unterstützung für fast fsck, native filesystem encryption, journaling, jedoch auch für non-journaling
+	\item ext4 - Aktuelle Version. Unterstützung für fast fsck, native filesystem encryption, journaling, jedoch auch für non-journaling
 \end{itemize}
-
 
 \subsection{Basics}
 
-Das Ext-Dateisystem verwendet Blöcke als Basiseinheit zum Speichern von Daten \cite{Ext2.07.01.2022}. Sogenannte "Inodes (Index-Nodes) werden zum Speichern von Metadaten verwendet, Blockgruppen zur optimierten logischen Strukturierung, Verzeichnisse um hierarchische Strukturen darstellen zu können, Block- und Inode-Bitmaps um allokierte Blöcke und Inodes zu kennzeichnen, sowie Superblöcke um allgemeine Informationen des Dateisystems zu speichern. Kopien von wichtigen Datenstrukturen wie z.B. den Superblöcken werden redundant vorgehalten und alle Daten welche mit Dateien assoziiert werden, sind aus Gründen der Performance gut lokalisiert\cite{Carrier.06.01.2022}.
+Das Ext-Dateisystem verwendet Blöcke als Basiseinheit zum Speichern von Daten \cite{Ext2.07.01.2022}, ähnlich wie Cluster in FAT- und NTFS-Dateisystemen. Ein Block kann 1024, 2048 oder 4096 Bytes groß sein. Sogenannte \textit{Inodes }(Index-Nodes) werden zum Speichern von Metadaten verwendet, Blockgruppen zur optimierten logischen Strukturierung, Verzeichnisse um hierarchische Strukturen darstellen zu können, Block- und Inode-Bitmaps um allokierte Blöcke und Inodes zu kennzeichnen, sowie Superblöcke um allgemeine Informationen des Dateisystems zu speichern. Kopien von wichtigen Datenstrukturen wie z.B. den Superblöcken werden redundant vorgehalten und alle Daten welche mit Dateien assoziiert werden, sind aus Gründen der Performance gut lokalisiert\cite{Carrier.06.01.2022}.
 
 \begin{figure}[H]
 	\centering
@@ -45,10 +42,6 @@ Abbildung \ref{fig:ext1} zeigt den Zusammenhang zwischen Verzeichniseinträgen, 
 \end{figure}
 
 Abbildung \ref{fig:layout} enthält eine graphische Darstellung des Layouts eines Ext-Dateisystems. Die Partition ist in Blockgruppen aufgeteilt und jede Blockgruppe enthält einen Superblock (optional), Group-Descriptors, die Block- und Inode-Bitmap, die Inode-Tabelle sowie die Datenblöcke. Auf diese Aufteilung innerhalb der Blockgruppen wird nun in den folgenden Unterkapiteln näher eingegangen.
-
-\subsubsection{Blöcke}
-
-Das Ext-Dateisystem verwendet Blöcke als grundlegende Dateneinheit, ähnlich wie Cluster in FAT- und NTFS-Dateisystemen. Ein Block kann 1024, 2048 oder 4096 bytes groß sein.
 
 \subsubsection{Superblöcke}
 
@@ -172,26 +165,18 @@ Mit Hilfe des Kommandos \textit{ls -li} können wir uns die Inode-ID ausgeben la
 
 Wir sehen in Abbildung \ref{fig:inodestats}, dass unsere zuvor erstellte Datei \textit{mydocument.txt} zur Inode 24529 gehört. Sie befindet sich in Blockgruppe 3, hat eine Größe von 11 Bytes (Inhalt: \textit{Hallo welt.}) und der Inhalt der Datei befindet sich in Block Nummer 100352.
 
-Mit Hilfe von \textit{dd} wollen wir uns nun den Inhalt des Blocks 100352 ansehen, um zu verifizieren ob dort auch die Daten unerer Datei liegen:
+Mit Hilfe von \textit{dd} wollen wir uns nun den Inhalt des Blocks 100352 ansehen, um zu verifizieren ob dort auch die Daten unserer Datei liegen:
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=12cm,keepaspectratio=true]{pictures/getfilecontent.png}
 	\caption{
-		Datei-Inhalt eines Blocks mit dd auslesen
+		Rohen Inhalt eines Blocks mit \textit{dd} auslesen
 	}
 	\label{fig:getfilecontent}
 \end{figure}
 
 Da jeder Block in unserem Dateisystem 4096 Bytes groß ist, beginnt der Inhalt dieser Datei an Byteoffset 411041792 (Blocknummer x Blockgröße). Wir kopieren mit \textit{dd} immer 32 Byte, müssen daher mit Hilfe des \textit{skip}-Arguments angeben, ab wann wir mit dem Kopieren starten wollen (411041792/32 = 12845056). Und siehe da, der Inhalt der Datei wird korrekt ausgegeben!
-
-Interessant ist, dass bei erneutem Schreiben in die Datei ein neuer Block verwendet wird, der alte immer noch die Daten des vorherigen Schreibvorgags enthält (Inode bleibt die Selbe):
-
-TODO stackoverflow? sonst weglassen.
-
-Das liegt daran, dass TODO!
-TODO: edit und dann anderer Block??? WARUM NEUER BLOCK WENN ICH ECHO MACH!?!?!?!??!?!?!?!?!
-
 
 \subsubsection{Löschen von Dateien}
 
@@ -207,7 +192,7 @@ Wir wissen noch die Inode ID 24529. Abbildung \ref{fig:istatafterdelete} zeigt d
 	\centering
 	\includegraphics[width=12cm,keepaspectratio=true]{pictures/istatafterdelete.png}
 	\caption{
-		Inode Inhalt nach dem Löschen auslesen
+		Inode-Inhalt nach dem Löschen auslesen
 	}
 	\label{fig:istatafterdelete}
 \end{figure}
@@ -281,9 +266,24 @@ Bei Ext3 ist der Zusammenhang zwischen dem Dateinamen und dem Inode noch vorhand
 File-Carving bedeutet das Suchen nach bestimmten Mustern (wie z.B. JPEG header Informationen) im rohen Binärdaten und somit das Zusammenfassen von unstrukturierten Inhalten zu einer Datei.
 Ein Tool dafür soll hier vorgestellt werden: Foremost \cite{Foremost.07.01.2022}
 
-Foremost ist ein Tool zur Wiederherstellung gelöschter Daten unter Verwendung von gängigen Datei-headern, footern sowie internen Datenstrukturen. Die Config-Datei unter \textit{/etc/foremost.conf} enthält binäre Signaturen zur Erkennung vieler gängiger Dateitypen.
+Foremost ist ein Tool zur Wiederherstellung gelöschter Daten unter Verwendung von gängigen Datei-headern, footern sowie internen Datenstrukturen. Die Config-Datei unter \textit{/etc/foremost.conf} enthält binäre Signaturen zur Erkennung vieler gängiger Dateitypen.\\
 
-TODO: funkionierendes beispiel!!!!!!!!!!
+Für das praktische Beispiel wurde eine \textit{png}-Datei angelegt und anschließend via \textit{rm} gelöscht. Folgendes Kommando wurde zur Wiederherstellung verwendet:
+
+\begin{lstlisting}
+sudo foremost -t jpg,png -v -q -d -b 4096 -i /dev/sdb -o /home/tsurugi/output
+\end{lstlisting}
+
+Nach ca. 2 Studen war foremost fertig und hat den Screenshot korrekt wieder hergestellt:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/foremostsuccess.png}
+	\caption{
+		Das Tool \textit{foremost} speichert wiederhergestellte Dateien im \textit{output} Ordner
+	}
+	\label{fig:foremostsuccess}
+\end{figure}
 
 Eine weitere Methode zur Wiederherstellung gelöschter Daten wird im nächsten Kapitel vorgestellt.
 
