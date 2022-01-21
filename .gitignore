@@ -21,7 +21,7 @@
 *.lot
 *.nav
 *.out
-*.pdf
+
 *.pytxcode
 *.run.xml
 *.snm
