@@ -45,7 +45,7 @@ Abbildung \ref{fig:layout} enthält eine graphische Darstellung des Layouts eine
 
 \subsubsection{Superblöcke}
 
-Da wir hier ein Ext3 System uf einem USB Stick erstellt haben und dieser keinen OS Kernel enthält, befindet sich auf unerem Stick auch kein Boot-Code. Dieser würde sich sonst in den ersten 1024 Bytes einer Platte befinden. Der \textit{Superblock} befindet sich ab Offset 1024 des Dateisystems und hat eine Größe von 1024 Bytes, obwohl nicht alle davon verwendet werden. Hier könnte man somit leicht Daten verstecken. Er enthält Basisinformation wie die Blockgröße (z.B. 4096 Byte), die totale Anzahl an Blöcken, die Anzahl an Blöcken pro Gruppe, die Anzahl an Inodes per Blockgruppe, den Volume-Name, den letzten Schreibzugriff, die letzte Mountzeit sowie den Pfad in dem das Dateisystem zuletzt gemounted war. Abbildung \ref{fig:superblock} zeigt eine simple Analyse des Superblocks auf unserem USB Stick.
+Da wir in den praktischen Beispielen (s.u.) ein Ext3 System auf einem USB Stick erstellt haben und dieser keinen OS Kernel enthält, befindet sich auf unserem Stick auch kein Boot-Code. Dieser würde sich sonst in den ersten 1024 Bytes befinden. Der \textit{Superblock} befindet sich ab Offset 1024 des Dateisystems und hat eine Größe von 1024 Bytes, obwohl nicht alle davon verwendet werden. Hier könnte man somit leicht Daten verstecken. Er enthält Basisinformation wie die Blockgröße (z.B. 4096 Byte), die totale Anzahl an Blöcken, die Anzahl an Blöcken pro Gruppe, die Anzahl an Inodes per Blockgruppe, den Volume-Name, den letzten Schreibzugriff, die letzte Mountzeit sowie den Pfad in dem das Dateisystem zuletzt gemounted war. Abbildung \ref{fig:superblock} zeigt eine simple Analyse des Superblocks auf unserem USB Stick.
 
 \begin{figure}[H]
 	\centering
@@ -56,12 +56,12 @@ Da wir hier ein Ext3 System uf einem USB Stick erstellt haben und dieser keinen 
 	\label{fig:superblock}
 \end{figure}
 
-Die ersten 4 Bytes repräsentieren die Anzahl an Inodes: \cite{Ext2.07.01.2022}:
+Die ersten 4 Bytes repräsentieren die Anzahl an Inodes: \cite{Ext2.07.01.2022}:\\
+\textbf{50 51 1d 00 -> Little endian -> 00 1D 51 50 ergibt 1921360 Inodes}(Vergleiche mit Abbildung \ref{fig:createfs}).\\\\
+Die zweiten 4 Bytes repräsentieren die Anzahl an Blöcken:
+\textbf{00 30 75 00 => Little endian => 00 75 30 00 = ergibt 7680000 Blöcke}. \\
 
-\textbf{50 51 1d 00 -> Little endian -> 00 1D 51 50 ergibt 1921360 Inodes}(Vergleiche mit Abbildung \ref{fig:createfs}).\\Die zweiten 4 Bytes repräsentieren die Anzahl an Blöcken:
-
-\textbf{00 30 75 00 => Little endien => 00 75 30 00 = ergibt 7680000 Blöcke}. Die Abbildung markiert außerdem noch den Pfad in welchem das Dateisystem zletzt gemounted war: \textbf{/media/usb}.
-
+In der Abbildung ist außerdem noch der Pfad, in welchem das Dateisystem zuletzt gemounted war, markiert: \textbf{/media/usb}.
 
 \subsubsection{Block Group Descriptor Tables}
 
@@ -108,7 +108,7 @@ Linux lab 5.14.6-tsurugi #1 SMP Mon Sep 20 21:45:06 CEST 2021 x86_64 x86_64 x86_
 	
 Als erstes wurde der USB Stick mit dem Ext3 Dateisystem frisch formatiert:
 
-\begin{lstlisting}[language=bash,caption={Create the FS}]
+\begin{lstlisting}[language=bash]
 # find mounted devices and their paths:
 lsblk
 
@@ -128,7 +128,7 @@ sudo mkfs -t ext3 /dev/sdb
 	\label{fig:createfs}
 \end{figure}
 
-Im Abbildung \ref{fig:createfs} ist zu sehen wie das Dateisystem auf dem USB Stick unter "/dev/sdc" erstellt wird. Es werden 7680000 4KB Blöcke mit 1921360 Inodes erstellt (32GB). Für das Dateisystem wird eine \ac{uuid} generiert, ein Journal erstellt, sowie die Blöcke der Superblock-Backups ausgegeben.
+Im Abbildung \ref{fig:createfs} ist zu sehen wie das Dateisystem auf dem USB Stick unter \textit{/dev/sdc} erstellt wird. Es werden 7680000 4KB Blöcke mit 1921360 Inodes erstellt (32GB). Für das Dateisystem wird eine \ac{uuid} generiert, ein Journal erstellt, sowie die Blöcke in denen sich die Superblock-Backups befinden, ausgegeben.
 
 
 \subsubsection{Erstellen von Dateien}
@@ -197,7 +197,7 @@ Wir wissen noch die Inode ID 24529. Abbildung \ref{fig:istatafterdelete} zeigt d
 	\label{fig:istatafterdelete}
 \end{figure}
 
-Die Inode gilt nun nicht mehr als allokiert (\textit{Not Allocated}), die Dateigröße wurde auf 0 Byte gesetzt und die Referenz zum Inhaltsblock entfernt. Außerdem kam ein \textit{Deleted}-Datensatz hinzu. Dennoch können wir immer noch die Daten der vorherigen Blocknummer wie oben beschrieben auslesen und bekommen den Inhalt der Datei. Es wird also nicht der Inhalt, sondern nur die Referenz in der Inode gelöscht und somit auch der Speicherplatz freigegeben. Dieser kann nun zu späterem Zeitpunkt überschrieben werden.
+Die Inode gilt nun nicht mehr als allokiert (\textit{Not Allocated}), die Dateigröße wurde auf 0 Byte gesetzt und die Referenz zum Inhaltsblock entfernt (Blockpointers zeroed). Außerdem kam ein \textit{Deleted}-Datensatz hinzu. Dennoch können wir immer noch die Daten der vorherigen Blocknummer mittels \textit{dd} wie oben beschrieben auslesen und bekommen den Inhalt der Datei. Es wird also nicht der Inhalt, sondern nur die Referenz in der Inode gelöscht und somit auch der Speicherplatz freigegeben. Dieser kann nun zu späterem Zeitpunkt überschrieben werden.
 
 \newpage
 
@@ -209,12 +209,11 @@ Normalerweise würden wir vor einer Analyse immer zuerst eine forensische Arbeit
 
 Folgende Kommandos könnten verwendet werden:
 
-\begin{lstlisting}
+\begin{lstlisting}[language=bash]
 $ sudo dd if=/dev/sdb of=usb.dd bs=512 conv=noerror,sync status=progress
 
 # dc3dd is a forensics extension of dd (e.g. hash based verification integrated)
 dc3dd if=/dev/sdb hof=/path/to/my/backup.raw hash=sha256
-
 \end{lstlisting}
 
 
@@ -235,11 +234,11 @@ Wir könnten den Superblock wie oben bereits beschrieben manuell analysieren, mi
 
 Für die weitere Auswertung von Inhalten, ist es wichtig den Allokationsstatus von Blöcken zu kennen. Ist ein Block belegt, so ist das ein Hinweis darauf, dort verwertbare Daten zu finden. Diesen Allokationsstatus zu finden ist ein 3-Schritte-Prozess (\cite{Carrier.06.01.2022}):
 
-\begin{itemize}
-	\item 1. Feststellen, zu welcher Blockgruppe der Block gehört
-	\item 2. Suchen des Eintrags der Gruppe in der Group-Descriptor-Tabelle um festzustellen, wo ihre Block-Bitmap gespeichert ist
-	\item 3. Zuletzt wird die Block-Bitmap analysiert und das dem betreffenden Block zugeordnete Bit untersucht. Wenn das Bit gesetzt ist, ist der Block allokiert
-\end{itemize}
+\begin{enumerate}
+	\item Feststellen, zu welcher Blockgruppe der Block gehört
+	\item Suchen des Eintrags der Gruppe in der Group-Descriptor-Tabelle um festzustellen, wo ihre Block-Bitmap gespeichert ist
+	\item Zuletzt wird die Block-Bitmap analysiert und das dem betreffenden Block zugeordnete Bit untersucht. Wenn das Bit gesetzt ist, ist der Block allokiert
+\end{enumerate}
 
 Der Allokationsstatus kann auch für das Wiederherstellen gelöschter Dateien hilfreich sein, denn mit dessen Hilfe kann die Suche nach bestimmten Inhalten (z.B. Keywords) auf gewissen Blockgruppen beschränkt werden, was viel Zeit sparen kann. 
 
@@ -251,17 +250,17 @@ Weitere Möglichkeiten der Auswertung basierend auf der Dateinamen- oder Applika
 
 Zurück zu unserem Beispiel oben, wir wissen ja noch die Inode ID 24529. Außerdem kennen wir den Inhalt "`Hallo Welt "'. Somit könnten wir als erste Idee zur Auswertung einfach nach dem Inhalt suchen:
 
-\begin{lstlisting}
+\begin{lstlisting}[language=bash]
 $ sudo strings /dev/sdb | grep "Hallo"
 \end{lstlisting}
  
-Dieses Kommando findet zwar den Inhalt noch, obwohl die Datei gelöscht wurde. Das sagt uns aber nichts über den Speicherort  und bei verschlüsselten oder kodierten Inhalten würde uns das auch nicht weit bringen. Wir benötigen bessere Methoden zur Auswertung und Datenwiederherstellung. Zwei davon werden im Folgenden präsentiert und erläutert.
+Dieses Kommando findet zwar den Inhalt noch, obwohl die Datei gelöscht wurde. Das sagt uns aber nichts über den Speicherort  und bei verschlüsselten oder kodierten Inhalten würde uns das auch nicht weit bringen. Außerdem kennen wir normalerweise auch nicht die Inode. Wir benötigen bessere Methoden zur Auswertung und Datenwiederherstellung. Zwei davon werden im Folgenden präsentiert und erläutert.
 
 \subsubsection{File-Carving}
 
 Die Wiederherstellung von Dateien ist bei Ext3-Dateisystemen nicht einfach. Bei Ext2 werden die Inode-Werte nicht gelöscht, wenn die Datei gelöscht wird, so dass die Blockzeiger noch vorhanden sind. Die Zeitwerte werden ebenfalls aktualisiert, wenn die Datei gelöscht wird, so dass man weiß, wann die Löschung erfolgt ist.
 
-Bei Ext3 ist der Zusammenhang zwischen dem Dateinamen und dem Inode noch vorhanden, aber die Blockpointer werden gelöscht. Um die Daten wiederherzustellen, ist es möglich  sog. File-Carving-Techniken anzuwenden. Gruppeninformationen lassen sich aus Performancegründen hier zu unserem Vorteil nutzen. Die Zuweisung von Blöcke in Blockgruppen ist jedoch abhängig vom Betriebssystem, es könnte also auch ein Carving des gesamten Platzes notwendig sein.
+Bei Ext3 ist der Zusammenhang zwischen dem Dateinamen und dem Inode noch vorhanden, aber die Blockpointer werden gelöscht. Um die Daten wiederherzustellen, ist es möglich  sog. File-Carving-Techniken anzuwenden. Gruppeninformationen lassen sich aus Performancegründen hier zu unserem Vorteil nutzen. Die Zuweisung von Blöcke in Blockgruppen ist jedoch abhängig vom Betriebssystem, es könnte also auch ein Carving des gesamten Platzes notwendig sein: es kann also ein zeit-intensives Unterfangen sein.
 
 File-Carving bedeutet das Suchen nach bestimmten Mustern (wie z.B. JPEG header Informationen) im rohen Binärdaten und somit das Zusammenfassen von unstrukturierten Inhalten zu einer Datei.
 Ein Tool dafür soll hier vorgestellt werden: Foremost \cite{Foremost.07.01.2022}
@@ -270,11 +269,11 @@ Foremost ist ein Tool zur Wiederherstellung gelöschter Daten unter Verwendung v
 
 Für das praktische Beispiel wurde eine \textit{png}-Datei angelegt und anschließend via \textit{rm} gelöscht. Folgendes Kommando wurde zur Wiederherstellung verwendet:
 
-\begin{lstlisting}
+\begin{lstlisting}[language=bash]
 sudo foremost -t jpg,png -v -q -d -b 4096 -i /dev/sdb -o /home/tsurugi/output
 \end{lstlisting}
 
-Nach ca. 2 Studen war foremost fertig und hat den Screenshot korrekt wieder hergestellt:
+Nach ca. zwei Stunden war \textit{foremost} fertig und hat den Screenshot korrekt wieder hergestellt:
 
 \begin{figure}[H]
 	\centering
@@ -291,8 +290,8 @@ Eine weitere Methode zur Wiederherstellung gelöschter Daten wird im nächsten K
 
 Das File-Journal wurde in Ext3 eingeführt und stellt die Integrität eines Dateisystems sicher, indem es eine Art Logbuch von Schreibzugriffen speichert. Dies ist u.a. hilfreich bei einem Systemabsturz oder Stromausfall. Mit ein bisschen Glück lassen sich in diesem Journal noch alte Inode-Kopien gelöschter Dateien finden, welche immer noch die Block-Referenzen beinhalten. Durch diesen Ansatz kann der Inhalt wiederhergestellt werden.
 
-Ein Tool zur Automatisierung der Wiederherstellung von Daten in Ext-Dateisystemen soll hier abschließend vorgestellt werden: \textit{ext4magic} \cite{Ext4magic.07.01.2022}.
-Abbildung \ref{fig:ext4magic} zeigt das Tool in Aktion. Nach erfolgreicher Wiederherstellung wird hier der Inhalt mittels \textit{cat} ausgegeben (Inode 24529). \textit{ext4magic} verwendet das oben beschriebene File-Journal zur Wiederherstellung.
+Ein Tool zur Automatisierung der Wiederherstellung von Daten in Ext-Dateisystemen, welches auf dem oben beschriebenen File-Journal Ansatz basiert, soll hier abschließend vorgestellt werden: \textit{ext4magic} \cite{Ext4magic.07.01.2022}.
+Abbildung \ref{fig:ext4magic} zeigt das Tool in Aktion. Nach erfolgreicher Wiederherstellung wird hier der Inhalt mittels \textit{cat} ausgegeben (Inode 24529).
 
 \begin{figure}[H]
 	\centering
