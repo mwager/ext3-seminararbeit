@@ -258,13 +258,11 @@ Für die weitere Auswertung von Inhalten, ist es wichtig den Allokationsstatus v
 
 Der Allokationsstatus kann auch für das Wiederherstellen gelöschter Dateien hilfreich sein, denn mit dessen Hilfe kann die Suche nach bestimmten Inhalten (z.B. Keywords) auf gewissen Blockgruppen beschränkt werden, was viel Zeit sparen kann. 
 
-Bisher haben wir den Inhaltsbereich analysiert. Ein weiterer Ansatz ist es, den Metadatenbereich zu verwenden. In unserem praktischen Beispiel haben wir bereits gesehen, dass nach dem Löschen einer Datei immer noch die Inode ausgelesen werden kann. Die Größe und Blockreferenz wird zwar gelöscht, dennoch gibt es einen \textit{Deleted}-Datensatz sowie weitere oben beschriebenen Informationen sind nch intakt. Diese Informationen in den Inodes können hilfreich für eine weitere Auswertung sein.
+Bisher haben wir den Inhaltsbereich analysiert. Ein weiterer Ansatz ist es, den Metadatenbereich zu verwenden. In unserem praktischen Beispiel haben wir bereits gesehen, dass nach dem Löschen einer Datei immer noch die Inode ausgelesen werden kann. Die Größe und Blockreferenz wird zwar gelöscht, dennoch gibt es einen \textit{Deleted}-Datensatz mit dem Zeitstempel der Löschung, sowie weitere oben beschriebenen Informationen sind noch intakt. Diese Informationen in den Inodes können hilfreich für eine weitere Auswertung sein.
 
+Weitere Möglichkeiten der Auswertung basierend auf der Dateinamen- oder Applikationskategorie werden in \cite{Carrier.06.01.2022} beschrieben, darauf wird jedoch hier nicht weiter eingegangen. Abschließend befassen wir uns im nächsten Kapitel mit dem Wiederherstellen gelöschter Dateien. 
 
-\subsection{Wiederherstellen von gelöschten Dateien}
-b) Welche Ansätze unter EXT3 gibt es, um eine gelöschte Datei wiederherzustellen?
-
-TODO: welche Ansätze? READ. sonst selbst.
+\subsection{Wiederherstellen gelöschter Dateien}
 
 Zurück zu unserem Beispiel oben, wir wissen ja noch die Inode ID 24529. Außerdem kennen wir den Inhalt "`Hallo Welt "'. Somit könnten wir als erste Idee zur Auswertung einfach nach dem Inhalt suchen:
 
@@ -272,24 +270,29 @@ Zurück zu unserem Beispiel oben, wir wissen ja noch die Inode ID 24529. Außerd
 $ sudo strings /dev/sdb | grep "Hallo"
 \end{lstlisting}
  
-Dieses Kommando findet zwar den Inhalt noch, obwohl die Datei gelöscht wurde. Das sagt uns aber nichts über den Speicherort  und bei verschlüsselten oder kodierten Inhalten würde uns das auch nicht weit bringen. Wir benötigen bessere Methoden zur Auswertung und Datenwiederherstellung.
+Dieses Kommando findet zwar den Inhalt noch, obwohl die Datei gelöscht wurde. Das sagt uns aber nichts über den Speicherort  und bei verschlüsselten oder kodierten Inhalten würde uns das auch nicht weit bringen. Wir benötigen bessere Methoden zur Auswertung und Datenwiederherstellung. Zwei davon werden im Folgenden präsentiert und erläutert.
 
- 
-dann  hier zeigen
+\subsubsection{File-Carving}
 
-UND dann SLEUTHKIT TODO: \cite{RecoverTSK.07.01.2022}
+Die Wiederherstellung von Dateien ist bei Ext3-Dateisystemen nicht einfach. Bei Ext2 werden die Inode-Werte nicht gelöscht, wenn die Datei gelöscht wird, so dass die Blockzeiger noch vorhanden sind. Die Zeitwerte werden ebenfalls aktualisiert, wenn die Datei gelöscht wird, so dass man weiß, wann die Löschung erfolgt ist.
 
-Rekursives Anzeigen aller Dateien, inklusive gelöschter Dateien:
-sudo fls -o 0 -r /dev/sdb
-...
-r/r * 24530:	Bildschirmfoto vom 2022-01-07 11-59-24.png
+Bei Ext3 ist der Zusammenhang zwischen dem Dateinamen und dem Inode noch vorhanden, aber die Blockpointer werden gelöscht. Um die Daten wiederherzustellen, ist es möglich  sog. File-Carving-Techniken anzuwenden. Gruppeninformationen lassen sich aus Performancegründen hier zu unserem Vorteil nutzen. Die Zuweisung von Blöcke in Blockgruppen ist jedoch abhängig vom Betriebssystem, es könnte also auch ein Carving des gesamten Platzes notwendig sein.
 
-Dann Wiederherstellen der Datei mit inode 24530 mittels icat:
-sudo icat -o 0 /dev/sdb 24530 > image.jpg
+File-Carving bedeutet das Suchen nach bestimmten Mustern (wie z.B. JPEG header Informationen) im rohen Binärdaten und somit das Zusammenfassen von unstrukturierten Inhalten zu einer Datei.
+Ein Tool dafür soll hier vorgestellt werden: Foremost \cite{Foremost.07.01.2022}
 
+Foremost ist ein Tool zur Wiederherstellung gelöschter Daten unter Verwendung von gängigen Datei-headern, footern sowie internen Datenstrukturen. Die Config-Datei unter \textit{/etc/foremost.conf} enthält binäre Signaturen zur Erkennung vieler gängiger Dateitypen.
 
-Ein weiteres Tool zur Wiederherstellung von Daten in Ext-Dateisystemen soll hier vorgestellt werden: \textit{ext4magic} \cite{Ext4magic.07.01.2022}.
-Abbildung \ref{fig:ext4magic} zeigt das Tool in Aktion. Nach erfolgreicher Wiederherstellung wird hier der Inhalt mittels \textit{cat} ausgegeben (Inode 24529). \textit{ext4magic} verwendet hier das sog. File-Journal (eingeführt in Ext3) zur Wiederherstellung. Das File-Journal stellt die Integrität eines Dateisystems sicher, indem es eine Art Logbuch von Schreibzugriffen speichert. Dies ist u.a. hilfreich bei einem Systemabsturz oder Stromausfall. Mit ein bisschen Glück lassen sich in diesem Journal noch alte Inode-Kopien gelöschter Dateien finden, welche immer noch die Block-Referenzen beinhalten. Somit kann der Inhalt wiederhergestellt werden.
+TODO: funkionierendes beispiel!!!!!!!!!!
+
+Eine weitere Methode zur Wiederherstellung gelöschter Daten wird im nächsten Kapitel vorgestellt.
+
+\subsubsection{Das File-Journal}
+
+Das File-Journal wurde in Ext3 eingeführt und stellt die Integrität eines Dateisystems sicher, indem es eine Art Logbuch von Schreibzugriffen speichert. Dies ist u.a. hilfreich bei einem Systemabsturz oder Stromausfall. Mit ein bisschen Glück lassen sich in diesem Journal noch alte Inode-Kopien gelöschter Dateien finden, welche immer noch die Block-Referenzen beinhalten. Durch diesen Ansatz kann der Inhalt wiederhergestellt werden.
+
+Ein Tool zur Automatisierung der Wiederherstellung von Daten in Ext-Dateisystemen soll hier abschließend vorgestellt werden: \textit{ext4magic} \cite{Ext4magic.07.01.2022}.
+Abbildung \ref{fig:ext4magic} zeigt das Tool in Aktion. Nach erfolgreicher Wiederherstellung wird hier der Inhalt mittels \textit{cat} ausgegeben (Inode 24529). \textit{ext4magic} verwendet das oben beschriebene File-Journal zur Wiederherstellung.
 
 \begin{figure}[H]
 	\centering
@@ -299,6 +302,3 @@ Abbildung \ref{fig:ext4magic} zeigt das Tool in Aktion. Nach erfolgreicher Wiede
 	}
 	\label{fig:ext4magic}
 \end{figure}
-
-
-TODO: file listing node.js script zum auslesen von Datenblöcken ans Ende des Docs!!!!!!!!!!!!!!
