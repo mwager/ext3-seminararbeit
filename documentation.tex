@@ -198,8 +198,6 @@ dashed=false,
 		\acro{ext}[EXT]{Extended file system}
 		\acro{uuid}[UUID]{Universal Unique Identifier}
 		
-		
-		
 	\end{acronym}
 	
 	
@@ -208,36 +206,35 @@ dashed=false,
 	
 	\printbibliography
 	
+	\newpage
 	\appendix
-	
-		% \section{Appendix: Project Scenario}\label{appendix:Project_scenario}
-		% \includepdf[pages=-]{../scenario/CM_scenario_definition.pdf}
 		
-		% \section{Appendix: System and Software Requirements Specification}\label{appendix:SRS_specification}
-		% \includepdf[pages=-]{../SRS/CM_system_software_requirements_specification.pdf}
 		
-		% \section{Appendix: Integration Test} \label{appendix:Integration_test}
-		% \includepdf[pages=-]{../integration_test/CM_integration_test_report.pdf}
-		
-		% \section{Appendix: Customer Integration Test}\label{appendix:Customer_integration_test}
-		% \includepdf[pages=-]{../customer_integration_test/CM_customer_integration_test_report.pdf}
-	
-		% \section{Appendix: Integration Test RC2} \label{appendix:Integration_test RC2}
-		% \includepdf[pages=-]{../integration_test_rc2/CM_integration_test_report_rc2.pdf}
-	%
-		% \section{Appendix: System Integration Test RC2}
-		% \label{appendix:System_integration_test RC2}
-		% \includepdf[pages=-]{../system_integration_test_rc2/CM_system_integration_test_report_rc2.pdf}
-	%	
-		% \section{Appendix: Project Status Reports}\label{appendix:Project_status_reports}
-		% \includepdf[pages=-]{../report/project_status_report_1_20201030.pdf}
-		% \includepdf[pages=-]{../report/project_status_report_2_20201106.pdf}
-		% \includepdf[pages=-]{../report/project_status_report_3_20201204.pdf}
-		% \includepdf[pages=-]{../report/project_status_report_4_20201214.pdf}
-	
-	
-	
-	
-	
+		\section{Appendix: Script zum Auslesen des Inhalts von Datenblöcken (JavaScript)}\label{appendix:UtilityScript}
+
+\begin{lstlisting}[language=java]
+/**
+* Simple script for reading out the raw bytes of a given blocknumber
+* 
+* Usage: node index.js $BLOCKNUMBER
+*/
+const { execSync } = require('child_process')
+const BLOCKSIZE = 4096
+
+function exec(cmd) {
+	const stdout = execSync(cmd)
+	return stdout
+}
+
+// read some bytes of a spefific block
+function dd_read(bytes, blocknumber) {
+	return exec(`sudo dd if=/dev/sdb status=none bs=${bytes} count=1 skip=${(BLOCKSIZE * blocknumber) / bytes} | hexdump -Cv` )
+}
+
+const blocknumber = parseInt(process.argv[2])
+const data = dd_read(512, blocknumber).toString()
+
+console.log(data)
+\end{lstlisting}  
 	
 \end{document}

@@ -4,33 +4,11 @@ TODO: NACH TODO SUCHEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-
-
 
 \section{Technische Hintergründe}
 
 \subsection{Geschichte des Ext-Dateisystems}
 
-% TODO: hier bissl mehr?
-% TODO: RE-READ ALLES FREITAG!!!!!!!!!!!!!!!
 % TODO: AUCH GLEICH BLOG POST! mit paar screenshots vielleicht?
 
 Das sogenannte \ac{ext} war das Erste einer Reihe von Dateisystemen welches speziell für Linux entwickelt wurde und damals das minix-Dateisystem ablöste. \ac{ext} in Version 1 ist mittlerweile allerdings veraltet und wird in aktuellen Linux-Distributionen nicht mehr verwendet. Ext3 ist die neuere Variante, bleibt von Grund auf jedoch exakt gleich wie Ext2, führt jedoch "file system journaling" ein. Die folgenden Varianten sind aktuell noch gängig und werden aktiv eingesetzt:
@@ -68,9 +46,13 @@ Abbildung \ref{fig:ext1} zeigt den Zusammenhang zwischen Verzeichniseinträgen, 
 
 Abbildung \ref{fig:layout} enthält eine graphische Darstellung des Layouts eines Ext-Dateisystems. Die Partition ist in Blockgruppen aufgeteilt und jede Blockgruppe enthält einen Superblock (optional), Group-Descriptors, die Block- und Inode-Bitmap, die Inode-Tabelle sowie die Datenblöcke. Auf diese Aufteilung innerhalb der Blockgruppen wird nun in den folgenden Unterkapiteln näher eingegangen.
 
+\subsubsection{Blöcke}
+
+Das Ext-Dateisystem verwendet Blöcke als grundlegende Dateneinheit, ähnlich wie Cluster in FAT- und NTFS-Dateisystemen. Ein Block kann 1024, 2048 oder 4096 bytes groß sein.
+
 \subsubsection{Superblöcke}
 
-Da wir hier ein Ext3 System uf einem USB Stick erstellt haben und dieser keinen OS Kernel enthält, befindet sich auf unerem Stick auch kein Boot-Code. Dieser würde sich sonst in den ersten 1024 Bytes einer Platte befinden. Der \textit{Superblock} befindet sich ab Offset 1024 des Dateisystems und hat eine Größe von 1024 Bytes, obwohl nicht alle davon verwendet werden. Er enthält Basisinformation wie die Blockgröße, die totale Anzahl an Blöcken, die Anzahl an Blöcken pro Gruppe, die Anzahl an Inodes per Blockgruppe, den Volume-Name, den letzten Schreibzugriff, die letzte Mountzeit sowie den Pfad in dem das Dateisystem zuletzt gemounted war. Abbildung \ref{fig:superblock} zeigt eine simple Analyse des Superblocks auf unserem USB Stick.
+Da wir hier ein Ext3 System uf einem USB Stick erstellt haben und dieser keinen OS Kernel enthält, befindet sich auf unerem Stick auch kein Boot-Code. Dieser würde sich sonst in den ersten 1024 Bytes einer Platte befinden. Der \textit{Superblock} befindet sich ab Offset 1024 des Dateisystems und hat eine Größe von 1024 Bytes, obwohl nicht alle davon verwendet werden. Hier könnte man somit leicht Daten verstecken. Er enthält Basisinformation wie die Blockgröße (z.B. 4096 Byte), die totale Anzahl an Blöcken, die Anzahl an Blöcken pro Gruppe, die Anzahl an Inodes per Blockgruppe, den Volume-Name, den letzten Schreibzugriff, die letzte Mountzeit sowie den Pfad in dem das Dateisystem zuletzt gemounted war. Abbildung \ref{fig:superblock} zeigt eine simple Analyse des Superblocks auf unserem USB Stick.
 
 \begin{figure}[H]
 	\centering
@@ -89,13 +71,13 @@ Die ersten 4 Bytes repräsentieren die Anzahl an Inodes: \cite{Ext2.07.01.2022}:
 
 
 \subsubsection{Block Group Descriptor Tables}
+
 Im Block nach dem Superblock folgt die Group-Descriptor-Tabelle. Diese beschreibt wo sich Daten wie z.B. die Inode-Tabelle oder die Bitmaps innerhalb einer Blockgruppe befinden. 
 
 
 \subsubsection{Block- und Inode-Bitmaps}
-Die Block- und Inode-Bitmaps speichern den Allokationsstatus von Blöcken, sowie Inodes innerhalb der Blockgruppe. Sie geben also an welche Blöcke- bzw Inodes innerhalb der Gruppe belegt sind und welche nicht. Jedes Bit repräsentiert hier den Status eines Blocks wobei "1" bedeutet, der Block ist verwendet, "0" bedeutet der Block ist frei bzw. verfügbar.
 
-Die Inode-Bitmap funktioniert ähnlich, mit dem Unterschied dass die Bits hier auf den Allokationsstatus einer Inode-Tabelle verweisen.
+Die Block- und Inode-Bitmaps speichern den Allokationsstatus von Blöcken, sowie Inodes innerhalb der Blockgruppe. Sie geben also an, welche Blöcke- bzw Inodes innerhalb der Gruppe belegt sind und welche nicht. Jedes Bit repräsentiert hier den Status eines Blocks wobei "1" bedeutet, der Block ist verwendet, "0" bedeutet der Block ist frei bzw. verfügbar. Die Inode-Bitmap funktioniert ähnlich, mit dem Unterschied dass die Bits hier auf den Allokationsstatus einer Inode-Tabelle verweisen.
 
 \subsubsection{Die Inode-Tabelle}
 
@@ -103,15 +85,17 @@ Die Inode-Tabelle wird verwendet um jedes Verzeichnis, jede Datei, symbolischen 
 
 \begin{itemize}
 	\item Dateigröße
-	\item Speicherort
-	\item Eigentümer
-	\item Gruppe
+	\item Speicherort (sog. Blockpointer)
+	\item Eigentümer (Linux User-Ids)
+	\item Gruppe (Linux Group-Ids)
 	\item Dateityp
 	\item Berechtigungen
-	\item Zugriffs- und Änderungs- und Löschzeitpunkt
+	\item Zugriffs- und Änderungs- und Löschzeitpunkt (Gespeichert als typische UNIX-Zeitstempel, also die Nummer an Sekunden seit dem 1. Januar 1970 UTC)
 \end{itemize}
 
 Der Dateiname wird nicht in Inodes gespeichert. Eine Datei kann ein Socket, ein Puffer, ein symbolischer Link oder eine normale Datei sein.
+
+In einer Inode befinden sich vordefinierte Datenstrukturen um auf die ersten 12 Blöcke zu referenzieren, welche die Daten der Datei enthalten (\textit{Blockpointer}). Außerdem gibt es weitere Pointer auf Blöcke, die bei größerem Dateiinhalt (> 48KB bei Blocksize 4096) dann einfach weitere Pointer zu weiteren Datenblöcken enthalten.
 
 \subsubsection{Datenblöcke}
 
@@ -165,7 +149,17 @@ touch mydocument.txt
 echo "Hallo welt." > mydocument.txt
 \end{lstlisting} 
 
-Mit Hilfe des Kommandos \textit{ls -li} können wir uns die Inode-ID ausgeben lassen um diese dann mit Hilfe des SleuthKit (\cite{Sleuthkit.07.01.2022}) Kommandos \textit{icat} näher zu betrachten.
+Mit Hilfe des Kommandos \textit{ls -li} können wir uns die Inode-ID ausgeben lassen um diese dann mit Hilfe des SleuthKit (\cite{Sleuthkit.07.01.2022}) Kommandos \textit{istat} näher zu betrachten. Abbildung \ref{fig:istatman} zeigt die Ausgabe der Manual-Page für das Tool.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/istat-man.png}
+	\caption{
+		Manual page \textit{istat}
+	}
+	\label{fig:istatman}
+\end{figure}
+
 
 \begin{figure}[H]
 	\centering
@@ -196,14 +190,12 @@ Interessant ist, dass bei erneutem Schreiben in die Datei ein neuer Block verwen
 TODO stackoverflow? sonst weglassen.
 
 Das liegt daran, dass TODO!
-
-
 TODO: edit und dann anderer Block??? WARUM NEUER BLOCK WENN ICH ECHO MACH!?!?!?!??!?!?!?!?!
 
 
 \subsubsection{Löschen von Dateien}
 
-Wir löschen die Datei mit folgemdem Kommando:
+Wir löschen die Datei mit folgendem Kommando:
 
 \begin{lstlisting}[language=bash]
 rm -rf mydocument.txt
@@ -215,35 +207,78 @@ Wir wissen noch die Inode ID 24529. Abbildung \ref{fig:istatafterdelete} zeigt d
 	\centering
 	\includegraphics[width=12cm,keepaspectratio=true]{pictures/istatafterdelete.png}
 	\caption{
-		Datei-Inhalt eines Blocks mit dd auslesen
+		Inode Inhalt nach dem Löschen auslesen
 	}
 	\label{fig:istatafterdelete}
 \end{figure}
 
-Die Inode ist nun nicht mehr allokiert (\textit{Not Allocated}), die Dateigröße beträgt nun 0 Byte und die Referenz zum Inhaltsblock wurde entfernt. Außerdem kam ein \textit{Deleted}-Datensatz hinzu. Dennoch können wir immer noch die Daten der vorherigen Blocknummer auslesen und bekommen den Inhalt der Datei. Es wird also nicht der Inhalt gelöscht, sondern nur die Referenz in der Inode gelöscht, sowie der Speicherplatz freigegeben.
+Die Inode gilt nun nicht mehr als allokiert (\textit{Not Allocated}), die Dateigröße wurde auf 0 Byte gesetzt und die Referenz zum Inhaltsblock entfernt. Außerdem kam ein \textit{Deleted}-Datensatz hinzu. Dennoch können wir immer noch die Daten der vorherigen Blocknummer wie oben beschrieben auslesen und bekommen den Inhalt der Datei. Es wird also nicht der Inhalt, sondern nur die Referenz in der Inode gelöscht und somit auch der Speicherplatz freigegeben. Dieser kann nun zu späterem Zeitpunkt überschrieben werden.
 
 \newpage
 
 \section{Forensische Analyse des EXT3 Dateisystems}
 
-a) Welche forensischen Konzepte existieren für die Auswertung eines EXT3 Dateisystems? 
+\subsection{Erstellen einer forensischen Arbeitskopie}
 
-TODO: ZUERST sleuthkit Vorstellung
+Normalerweise würden wir vor einer Analyse immer zuerst eine forensische Arbeitskopie erstellen. Aus Gründen der Einfachheit wird hier jedoch darauf verzichtet und bei sämtlichen Analysen direkt auf das Blockdevice (\textit{/dev/sdb}) zugegriffen.
+
+Folgende Kommandos könnten verwendet werden:
+
+\begin{lstlisting}
+$ sudo dd if=/dev/sdb of=usb.dd bs=512 conv=noerror,sync status=progress
+
+# dc3dd is a forensics extension of dd (e.g. hash based verification integrated)
+dc3dd if=/dev/sdb hof=/path/to/my/backup.raw hash=sha256
+
+\end{lstlisting}
 
 
-sudo fsstat -o 0 /dev/sdb
-FILE SYSTEM INFORMATION
---------------------------------------------
-File System Type: Ext3
-usw... CHECK DAS GENAU!
+\subsection{Forensische Konzepte zur Auswertung}
+
+Im diesem Kapitel werden einige Konzepte zur Auswertung von Ext-Dateisystemen vorgestellt. Wir wissen, dass im Superblock wichtige Informationen über das Dateisystem gespeichert sind und können somit dort ansetzen. Sollte der Superblock korrupt sein, ist es auch relativ einfach nach Backups zu suchen um dann diese zu verwenden.
+
+Wir könnten den Superblock wie oben bereits beschrieben manuell analysieren, mit Hilfe des Tools \textit{fsstat} ist es  jedoch einfacher, sich grundlegende Information ausgeben zu lassen. Das Tool gibt Metadaten, sowie Inhaltsinformationen aus und anschließend Informationen zu jeder Blockgruppe. Diese Informationen können für weitere Untersuchungen sehr hilfreich sein. Abbildung \ref{fig:fsstat} zeigt die Ausgabe des Tools für unseren USB Stick. Wir sehen z.b. auch, welche Blöcke in welcher Gruppe liegen, eine Information die besonders relevant sein kann.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/fsstat.png}
+	\caption{
+		Ausgabe von fsstat für unseren USB Stick
+	}
+	\label{fig:fsstat}
+\end{figure}
+
+Für die weitere Auswertung von Inhalten, ist es wichtig den Allokationsstatus von Blöcken zu kennen. Ist ein Block belegt, so ist das ein Hinweis darauf, dort verwertbare Daten zu finden. Diesen Allokationsstatus zu finden ist ein 3-Schritte-Prozess (\cite{Carrier.06.01.2022}):
+
+\begin{itemize}
+	\item 1. Feststellen, zu welcher Blockgruppe der Block gehört
+	\item 2. Suchen des Eintrags der Gruppe in der Group-Descriptor-Tabelle um festzustellen, wo ihre Block-Bitmap gespeichert ist
+	\item 3. Zuletzt wird die Block-Bitmap analysiert und das dem betreffenden Block zugeordnete Bit untersucht. Wenn das Bit gesetzt ist, ist der Block allokiert
+\end{itemize}
+
+Der Allokationsstatus kann auch für das Wiederherstellen gelöschter Dateien hilfreich sein, denn mit dessen Hilfe kann die Suche nach bestimmten Inhalten (z.B. Keywords) auf gewissen Blockgruppen beschränkt werden, was viel Zeit sparen kann. 
+
+Bisher haben wir den Inhaltsbereich analysiert. Ein weiterer Ansatz ist es, den Metadatenbereich zu verwenden. In unserem praktischen Beispiel haben wir bereits gesehen, dass nach dem Löschen einer Datei immer noch die Inode ausgelesen werden kann. Die Größe und Blockreferenz wird zwar gelöscht, dennoch gibt es einen \textit{Deleted}-Datensatz sowie weitere oben beschriebenen Informationen sind nch intakt. Diese Informationen in den Inodes können hilfreich für eine weitere Auswertung sein.
 
 
+\subsection{Wiederherstellen von gelöschten Dateien}
 b) Welche Ansätze unter EXT3 gibt es, um eine gelöschte Datei wiederherzustellen?
 
-vorher ggf mal ls -li und inode number merken!
-dann rm -rf hier zeigen
+TODO: welche Ansätze? READ. sonst selbst.
 
-UND dann SLEUTHKIT
+Zurück zu unserem Beispiel oben, wir wissen ja noch die Inode ID 24529. Außerdem kennen wir den Inhalt "`Hallo Welt "'. Somit könnten wir als erste Idee zur Auswertung einfach nach dem Inhalt suchen:
+
+\begin{lstlisting}
+$ sudo strings /dev/sdb | grep "Hallo"
+\end{lstlisting}
+ 
+Dieses Kommando findet zwar den Inhalt noch, obwohl die Datei gelöscht wurde. Das sagt uns aber nichts über den Speicherort  und bei verschlüsselten oder kodierten Inhalten würde uns das auch nicht weit bringen. Wir benötigen bessere Methoden zur Auswertung und Datenwiederherstellung.
+
+ 
+dann  hier zeigen
+
+UND dann SLEUTHKIT TODO: \cite{RecoverTSK.07.01.2022}
+
 Rekursives Anzeigen aller Dateien, inklusive gelöschter Dateien:
 sudo fls -o 0 -r /dev/sdb
 ...
@@ -253,41 +288,17 @@ Dann Wiederherstellen der Datei mit inode 24530 mittels icat:
 sudo icat -o 0 /dev/sdb 24530 > image.jpg
 
 
-TODO: THIS WORKED!!!!!!!! auch mit rm -rf! MEHR EXPERIMENTE. WIE FUNZT DAS?
-irgendwie mit dem journal. read man!
-sudo ext4magic /dev/sdc -M
+Ein weiteres Tool zur Wiederherstellung von Daten in Ext-Dateisystemen soll hier vorgestellt werden: \textit{ext4magic} \cite{Ext4magic.07.01.2022}.
+Abbildung \ref{fig:ext4magic} zeigt das Tool in Aktion. Nach erfolgreicher Wiederherstellung wird hier der Inhalt mittels \textit{cat} ausgegeben (Inode 24529). \textit{ext4magic} verwendet hier das sog. File-Journal (eingeführt in Ext3) zur Wiederherstellung. Das File-Journal stellt die Integrität eines Dateisystems sicher, indem es eine Art Logbuch von Schreibzugriffen speichert. Dies ist u.a. hilfreich bei einem Systemabsturz oder Stromausfall. Mit ein bisschen Glück lassen sich in diesem Journal noch alte Inode-Kopien gelöschter Dateien finden, welche immer noch die Block-Referenzen beinhalten. Somit kann der Inhalt wiederhergestellt werden.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=12cm,keepaspectratio=true]{pictures/ext4magic-recovery.png}
+	\caption{
+		Wiederherstellung gelöschter Daten mit dem Tool \textit{ext4magic} \cite{Ext4magic.07.01.2022}
+	}
+	\label{fig:ext4magic}
+\end{figure}
 
-
-
-TODO: autopsy vorstellung und BEISPIEL!!!!!!!!!!!!!!!!!!!!!!!????????????
-
-TODO recover on linux:\\
-	https://possiblelossofprecision.net/?p=1216\\
-	weitere tools linux: foremost, dff? ...\\
-		-> https://www.cgsecurity.org/wiki/PhotoRec
-	sudo ext4magic /dev/sdc -M
-
-TODO:
-READ this: https://en.wikipedia.org/wiki/Ext3
-
-
-
-
-\subsection{Praktisches Beispiel}
-
-1. Files erstellen und dann löschen (1mal mit papierkorb 1mal mit rm -rf - ggf auch ganzes DIR!)
-2. Forensische Arbeitskopie erstellen:
-
-\begin{lstlisting}
-$ sudo dd if=/dev/sdc of=usb.dd bs=512 conv=noerror,sync status=progress
-\end{lstlisting}
-
-TODO beispiel:
-
-Datei erstellen, löschen ist ja bereits in TEIL1 passiert! darauf verweisen, daran werde ich nun weiterarbeiten hier!
-
-ERSTMAL ARBEITSKOPIE!!! ganzen prozess erklären (siehe forensics BOOK -> why, how etc...)
-schön mit screenshots und code ausschnitten!
 
 TODO: file listing node.js script zum auslesen von Datenblöcken ans Ende des Docs!!!!!!!!!!!!!!
